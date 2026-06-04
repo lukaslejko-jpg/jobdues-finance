@@ -12,6 +12,7 @@ node_modules/
 dist/
 .vite/
 .vercel/
+tools/
 
 # OS/editor noise
 .DS_Store
