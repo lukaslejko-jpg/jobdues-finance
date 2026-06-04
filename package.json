@@ -1,0 +1,9 @@
+{
+  "name": "finance-ai-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-vercel-config.cjs",
+    "vercel-build": "node scripts/build-vercel-config.cjs"
+  }
+}
