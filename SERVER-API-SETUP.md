@@ -18,16 +18,31 @@ Na server nahraj projekt do stabilneho priecinka, napriklad:
 C:\FinanceAI
 ```
 
+Serverova struktura ma byt neutralna:
+
+```text
+C:\FinanceAI
+  api
+    local-sql-api.ps1
+    .env
+    client-access.json
+  iis-api
+    web.config
+  server
+    run-finance-ai-api.ps1
+    install-finance-ai-api-task.ps1
+```
+
 Citlive subory vytvor iba na serveri:
 
 ```text
-C:\FinanceAI\work\soleya-finance-ai-dashboard\.env
-C:\FinanceAI\work\soleya-finance-ai-dashboard\client-access.json
+C:\FinanceAI\api\.env
+C:\FinanceAI\api\client-access.json
 ```
 
 Tieto subory nepatria na GitHub.
 
-## 2. Odporucane `.env`
+## 2. Odporucane `api\.env`
 
 ```text
 SQL_SERVER=tvoj_sql_server
