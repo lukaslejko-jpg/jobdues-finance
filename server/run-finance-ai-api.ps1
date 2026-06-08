@@ -4,7 +4,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$apiScript = Join-Path $ProjectRoot "work\soleya-finance-ai-dashboard\local-sql-api.ps1"
+$apiScript = Join-Path $ProjectRoot "api\local-sql-api.ps1"
 if (-not (Test-Path -LiteralPath $apiScript)) {
   throw "Finance AI API script was not found: $apiScript"
 }
