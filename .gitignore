@@ -2,6 +2,9 @@
 work/soleya-finance-ai-dashboard/.env
 work/soleya-finance-ai-dashboard/client-access.json
 work/soleya-finance-ai-dashboard/ai-memory.json
+api/.env
+api/client-access.json
+api/ai-memory.json
 
 # Local backups and generated archives
 backups/
