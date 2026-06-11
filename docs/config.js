@@ -1,6 +1,6 @@
 // Generated during build. Configure FINANCE_AI_API_BASE_URL in Vercel.
 (function () {
-  const apiBase = "http://localhost:3000";
+  const apiBase = "https://trickster-upriver-process.ngrok-free.dev";
   const authTokenKey = "financeAiAuthToken";
 
   window.FINANCE_AI_API_BASE_URL = apiBase;
