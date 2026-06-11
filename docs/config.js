@@ -14,12 +14,13 @@
       rawUrl.startsWith("/api/");
     const token = window.localStorage.getItem(authTokenKey);
 
-    if (token && isApiCall) {
+    if (isApiCall) {
       init = {
         ...init,
         headers: {
           ...(init.headers || {}),
-          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       };
     }
