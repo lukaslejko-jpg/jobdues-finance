@@ -25,12 +25,13 @@ fs.writeFileSync(
       rawUrl.startsWith("/api/");
     const token = window.localStorage.getItem(authTokenKey);
 
-    if (token && isApiCall) {
+    if (isApiCall) {
       init = {
         ...init,
         headers: {
           ...(init.headers || {}),
-          Authorization: \`Bearer \${token}\`,
+          "ngrok-skip-browser-warning": "true",
+          ...(token ? { Authorization: \`Bearer \${token}\` } : {}),
         },
       };
     }
@@ -43,7 +44,7 @@ fs.writeFileSync(
         .json()
         .then((payload) => {
           if (payload && payload.token) {
-            window.localStorage.setItem(authTokenKey, payload.token);
+            window.localStorage.setItem(authTokenKey);
           }
         })
         .catch(() => {});
