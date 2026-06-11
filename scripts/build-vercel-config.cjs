@@ -3,7 +3,8 @@ const path = require("path");
 
 const docsDir = path.join(__dirname, "..", "docs");
 const configPath = path.join(docsDir, "config.js");
-const apiBase = (process.env.FINANCE_AI_API_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
+const defaultApiBase = "https://trickster-upriver-process.ngrok-free.dev";
+const apiBase = (process.env.FINANCE_AI_API_BASE_URL || defaultApiBase).replace(/\/$/, "");
 
 fs.mkdirSync(docsDir, { recursive: true });
 fs.writeFileSync(
