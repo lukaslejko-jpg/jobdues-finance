@@ -164,6 +164,53 @@
       .cookie-actions button{min-height:36px;padding:0 8px;font-size:12px}
     }
 
+
+    /* Mobile responsive v2 */
+    .content-wrap{width:100%}
+    @media(max-width:900px){
+      .app{display:none;grid-template-columns:1fr;width:100%;overflow-x:hidden}
+      .sidebar{display:none}
+      .main{width:100%;max-width:100vw;overflow-x:hidden;padding:22px 14px 106px}
+      .topbar{display:grid;grid-template-columns:1fr;width:100%;gap:16px;margin-bottom:18px}
+      .topbar>div{min-width:0;width:100%}
+      #content{width:100%;max-width:100%;overflow:hidden}
+      .grid,.analysis{display:grid;width:100%;max-width:100%;grid-template-columns:minmax(0,1fr)!important;gap:14px}
+      .span12,.span8,.span7,.span6,.span5,.span4{grid-column:1/-1!important}
+      .kpis,.kpis.two,.health,.architecture,.endpoints,.product-grid,.legal-grid{display:grid;width:100%;max-width:100%;grid-template-columns:minmax(0,1fr)!important;gap:14px}
+      .card,.kpi,.comment,.alert,.leak,.pill{max-width:100%;min-width:0}
+      .actions{display:grid;width:100%;grid-template-columns:1fr 1fr;gap:10px;justify-content:stretch}
+      .seg{grid-column:1/-1;width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+      .seg button{min-width:0;white-space:nowrap;padding:0 6px}
+      .date-range.active{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}
+      .role-btn,.tour-btn,.logout-btn{width:100%;min-width:0}
+      .client-meta{display:grid;grid-template-columns:1fr;width:100%}
+      .client-chip,.period-chip{width:100%;white-space:normal;overflow-wrap:anywhere}
+      .mobile{display:grid}
+      .ai-fab{right:12px;bottom:88px;max-width:calc(100vw - 24px)}
+    }
+    @media(max-width:480px){
+      .main{padding:16px 10px 102px}
+      h1{font-size:30px}
+      .eyebrow{font-size:11px}
+      .client-chip,.period-chip{font-size:13px;padding:8px 10px}
+      .seg button{font-size:13px}
+      .role-btn,.tour-btn,.logout-btn{font-size:14px;min-height:42px}
+      .card{padding:16px;border-radius:16px}
+      .kpi{min-height:132px;padding:18px;border-radius:16px}
+      .kpi span{font-size:11px}
+      .kpi strong{font-size:30px}
+      .kpi .kpi-insight{font-size:13px;margin-top:12px;padding-top:10px}
+      .chart{height:230px}
+      .ai-fab{height:42px;font-size:13px;padding:0 14px}
+      .login{padding:10px}
+      .login-card{padding:18px;border-radius:16px}
+      .login-card .brand-logo{width:min(100%,210px);height:72px}
+      .login-card h1{font-size:28px;margin-top:14px}
+      .cookie-banner{bottom:calc(10px + env(safe-area-inset-bottom));left:10px;right:10px;max-height:22svh;padding:9px 10px}
+      .cookie-banner strong{font-size:12px}
+      .cookie-actions button{min-height:34px;font-size:11px}
+    }
+
   </style>
 </head>
 <body>
