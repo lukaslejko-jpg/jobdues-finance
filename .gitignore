@@ -1,14 +1,24 @@
 # Secrets and local runtime data
+.env
+.env.*
+!.env.example
 work/soleya-finance-ai-dashboard/.env
 work/soleya-finance-ai-dashboard/client-access.json
 work/soleya-finance-ai-dashboard/ai-memory.json
 api/.env
 api/client-access.json
 api/ai-memory.json
+client-access.json
+ai-memory.json
+*secret*
+*token*
+*credential*
 
 # Local backups and generated archives
 backups/
 *.zip
+outputs/restore-*/
+outputs/manualy/*.docx
 
 # Dependencies/build artifacts
 node_modules/
