@@ -167,9 +167,20 @@ Skus:
 3. Prihlasit sa znova.
 4. Skontrolovat, ci hore svieti spravna firma.
 
-Ak problem trva, kontaktuj spravcu Finance AI.
+Ak problem trva, kontaktuj spravcu Finance AI na info@jobdues.sk.
 
 ## Dolezite upozornenie
 
 Finance AI je analyticky nastroj. Pomaha rychlo citat financne data a hladat rizika, ale nenahradza uctovnika, auditora ani financneho poradcu.
 
+
+
+## Prevadzkovatel
+
+Prevadzkovatel: JOB & DUES s.r.o.
+ICO: 50841327
+DIC: 2120495047
+IC DPH: SK2120495047
+Platca DPH: Ano
+Sidlo: Demjata 307, 08213 Demjata, Slovenska republika
+Kontakt: info@jobdues.sk
