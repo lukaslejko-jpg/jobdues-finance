@@ -1422,7 +1422,15 @@ while ($listener.IsListening) {
     if ($path -eq "/api/analytics/cashflow") {
       $periodWhere = Get-PeriodCondition $url "e"
       $cashRows = Invoke-Select "SELECT RIGHT('0' + CAST(e.C061_MesVystavenia AS varchar(2)),2) + '/' + CAST(e.C062_RokVystavenia AS varchar(4)) AS month, SUM(CASE WHEN p.C106_MDSyntetickyUcet = '221' THEN CAST(p.C105_CiastkaTuzemskaMena AS decimal(18,2)) ELSE 0 END) AS income, SUM(CASE WHEN p.C108_DALSyntetickyUcet = '221' THEN CAST(p.C105_CiastkaTuzemskaMena AS decimal(18,2)) ELSE 0 END) AS expense FROM dbo.T041_EUD_Polozky p JOIN dbo.T040_EUD e ON e.C000_ID = p.C010_IDEUD WHERE (p.C106_MDSyntetickyUcet = '221' OR p.C108_DALSyntetickyUcet = '221') $periodWhere GROUP BY e.C062_RokVystavenia, e.C061_MesVystavenia ORDER BY e.C062_RokVystavenia, e.C061_MesVystavenia" $database
-      Send-Json $context 200 @{ ok = $true; database = $database; mode = "real-sql"; trend = @($cashRows) }
+      $cashSummary = First-Row "SELECT SUM(CASE WHEN p.C106_MDSyntetickyUcet = '221' THEN CAST(p.C105_CiastkaTuzemskaMena AS decimal(18,2)) ELSE 0 END) AS bankIncome, SUM(CASE WHEN p.C108_DALSyntetickyUcet = '221' THEN CAST(p.C105_CiastkaTuzemskaMena AS decimal(18,2)) ELSE 0 END) AS bankExpense, COUNT(*) AS entries FROM dbo.T041_EUD_Polozky p JOIN dbo.T040_EUD e ON e.C000_ID = p.C010_IDEUD WHERE (p.C106_MDSyntetickyUcet = '221' OR p.C108_DALSyntetickyUcet = '221') $periodWhere" $database
+      $bankIncome = To-Number $cashSummary.bankIncome
+      $bankExpense = To-Number $cashSummary.bankExpense
+      $netCashflow = [Math]::Round($bankIncome - $bankExpense, 2)
+      $cashGap = if ($bankExpense -gt $bankIncome) { [Math]::Round($bankExpense - $bankIncome, 2) } else { 0 }
+      $coverageRatio = if ($bankExpense -gt 0) { [Math]::Round(($bankIncome / $bankExpense) * 100, 2) } else { 0 }
+      $status = if ($netCashflow -lt 0) { "risk" } elseif ($coverageRatio -lt 110 -and $bankExpense -gt 0) { "watch" } else { "healthy" }
+      $comment = if ($netCashflow -lt 0) { "Výdavky z bankového účtu 221 sú vo vybranom období vyššie ako príjmy o $cashGap EUR. Odporúčam skontrolovať splatné záväzky a očakávané inkasá." } elseif ($bankExpense -gt 0) { "Príjmy na účte 221 pokrývajú výdavky na úrovni $coverageRatio %. Cashflow je v tomto období kladný, sleduj však najbližšie splatnosti." } else { "Vo vybranom období nie sú dostupné bankové výdavky na účte 221. Skontroluj, či sú bankové pohyby za obdobie zaúčtované." }
+      Send-Json $context 200 @{ ok = $true; database = $database; mode = "real-sql"; trend = @($cashRows); summary = @{ bankIncome = $bankIncome; bankExpense = $bankExpense; netCashflow = $netCashflow; cashGap = $cashGap; coverageRatio = $coverageRatio; status = $status; entries = (To-Number $cashSummary.entries); source = "dbo.T040_EUD + dbo.T041_EUD_Polozky, účet 221" }; comment = $comment }
       continue
     }
 
