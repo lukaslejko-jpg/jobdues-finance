@@ -245,6 +245,17 @@ function Write-AccessConfig($items) {
   $items | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $path -Encoding UTF8
 }
 
+function Test-AccessExpired($item) {
+  if ($null -eq $item -or [string]::IsNullOrWhiteSpace([string]$item.expiresAt)) { return $false }
+  try {
+    $expiresAt = [DateTime]::ParseExact([string]$item.expiresAt, "yyyy-MM-dd", [Globalization.CultureInfo]::InvariantCulture)
+    return (Get-Date) -gt $expiresAt.Date.AddDays(1).AddTicks(-1)
+  }
+  catch {
+    return $false
+  }
+}
+
 function Get-AiMemoryPath {
   return Join-Path $root "ai-memory.json"
 }
@@ -291,7 +302,7 @@ function Find-LoginAccess($email, $password, $role) {
     $itemEmail = ([string]$item.email).Trim().ToLowerInvariant()
     $itemRole = if ($item.role) { [string]$item.role } else { "client" }
     $itemActive = if ($null -ne $item.active) { [bool]$item.active } else { $true }
-    if ($itemActive -and $itemEmail -eq $email -and [string]$item.password -eq $password -and $itemRole -eq $role) {
+    if ($itemActive -and -not (Test-AccessExpired $item) -and $itemEmail -eq $email -and [string]$item.password -eq $password -and $itemRole -eq $role) {
       return $item
     }
   }
@@ -1014,7 +1025,7 @@ while ($listener.IsListening) {
       $loginRole = if ($body.role -eq "admin") { "admin" } else { "client" }
       $access = Find-LoginAccess $body.email $body.password $loginRole
       if ($null -eq $access) {
-        Send-Json $context 401 @{ ok = $false; error = "Nespravny email, heslo, rola alebo deaktivovany pristup." }
+        Send-Json $context 401 @{ ok = $false; error = "Nespravny email, heslo, rola, deaktivovany alebo expirovany pristup." }
         continue
       }
       $loginDb = [string]$access.database
@@ -1169,6 +1180,7 @@ while ($listener.IsListening) {
           role = if ($body.role) { [string]$body.role } else { "client" }
           password = if ($body.password) { [string]$body.password } else { "" }
           active = if ($null -ne $body.active) { [bool]$body.active } else { $true }
+          expiresAt = if ($body.expiresAt) { [string]$body.expiresAt } else { "" }
           assignedAt = (Get-Date).ToString("s")
         }
         Write-AccessConfig $items
