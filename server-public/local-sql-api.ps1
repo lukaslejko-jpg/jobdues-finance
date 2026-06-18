@@ -245,6 +245,50 @@ function Write-AccessConfig($items) {
   $items | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $path -Encoding UTF8
 }
 
+function Get-LoginAuditPath {
+  return Join-Path $root "login-audit.json"
+}
+
+function Read-LoginAudit {
+  $path = Get-LoginAuditPath
+  if (-not (Test-Path -LiteralPath $path)) { return @() }
+  try {
+    $items = Get-Content -LiteralPath $path -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($null -eq $items) { return @() }
+    if ($items -is [array]) { return $items }
+    return @($items)
+  }
+  catch {
+    return @()
+  }
+}
+
+function Write-LoginAudit($items) {
+  $path = Get-LoginAuditPath
+  $items | Select-Object -First 500 | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $path -Encoding UTF8
+}
+
+function Add-LoginAudit($context, $email, $role, $database, $companyName, $success, $reason) {
+  $ip = ""
+  try { $ip = [string]$context.Request.RemoteEndPoint.Address } catch {}
+  $ua = [string]$context.Request.UserAgent
+  $entry = [pscustomobject]@{
+    id = [guid]::NewGuid().ToString("N")
+    createdAt = (Get-Date).ToString("s")
+    email = ([string]$email).Trim()
+    role = [string]$role
+    database = [string]$database
+    companyName = [string]$companyName
+    success = [bool]$success
+    result = if ($success) { "úspešné" } else { "neúspešné" }
+    reason = [string]$reason
+    ip = $ip
+    userAgent = $ua
+  }
+  $items = @($entry) + @(Read-LoginAudit)
+  Write-LoginAudit $items
+}
+
 function Test-AccessExpired($item) {
   if ($null -eq $item -or [string]::IsNullOrWhiteSpace([string]$item.expiresAt)) { return $false }
   try {
@@ -1025,11 +1069,13 @@ while ($listener.IsListening) {
       $loginRole = if ($body.role -eq "admin") { "admin" } else { "client" }
       $access = Find-LoginAccess $body.email $body.password $loginRole
       if ($null -eq $access) {
+        Add-LoginAudit $context $body.email $loginRole "" "" $false "Nespravny email, heslo, rola, deaktivovany alebo expirovany pristup."
         Send-Json $context 401 @{ ok = $false; error = "Nespravny email, heslo, rola, deaktivovany alebo expirovany pristup." }
         continue
       }
       $loginDb = [string]$access.database
       $session = New-AuthSession $access $loginRole
+      Add-LoginAudit $context $access.email $loginRole $loginDb $access.companyName $true "Prihlasenie uspesne."
       Send-Json $context 200 @{
         ok = $true
         mode = "local-auth"
@@ -1055,6 +1101,15 @@ while ($listener.IsListening) {
 
     if (-not (Test-AuthorizedDatabase $auth $database)) {
       Send-Json $context 403 @{ ok = $false; error = "Tento pristup nema povolenie na vybranu firmu." }
+      continue
+    }
+
+    if ($path -eq "/api/admin/login-audit") {
+      if ($auth.role -ne "admin") {
+        Send-Json $context 403 @{ ok = $false; error = "Admin opravnenie je povinne." }
+        continue
+      }
+      Send-Json $context 200 @{ ok = $true; mode = "local-audit"; data = @((Read-LoginAudit) | Select-Object -First 100) }
       continue
     }
 
