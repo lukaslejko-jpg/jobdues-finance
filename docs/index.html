@@ -395,7 +395,9 @@
   </section>
   <script src="config.js"></script>
   <script>
-    const API_BASE=((window.FINANCE_AI_API_BASE_URL||localStorage.getItem("financeAiApiBaseUrl")||"http://localhost:3000")+"").replace(/\/$/,"");
+    const IS_LOCAL_APP=["localhost","127.0.0.1"].includes(location.hostname),DEFAULT_API_BASE=IS_LOCAL_APP?"http://localhost:3000":"https://trickster-upriver-process.ngrok-free.dev";
+    const configuredApiBase=(window.FINANCE_AI_API_BASE_URL||localStorage.getItem("financeAiApiBaseUrl")||"")+"",safeConfiguredApiBase=!IS_LOCAL_APP&&/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(configuredApiBase)?"":configuredApiBase;
+    const API_BASE=(safeConfiguredApiBase||DEFAULT_API_BASE).replace(/\/$/,"");
     const nativeFetch=window.fetch.bind(window);
     window.fetch=(input,init)=>{init=init||{};if(typeof input==="string"&&input.startsWith("http://localhost:3000"))input=API_BASE+input.slice("http://localhost:3000".length);const token=localStorage.getItem("financeAiAuthToken");const target=typeof input==="string"?input:"";const isApiTarget=target.startsWith(API_BASE)||target.startsWith("/api/");if(isApiTarget){init.headers={...(init.headers||{}),"ngrok-skip-browser-warning":"true",...(token?{Authorization:`Bearer ${token}`}:{})}}return nativeFetch(input,init)};
     const fmt=new Intl.NumberFormat("sk-SK",{style:"currency",currency:"EUR",maximumFractionDigits:0});
