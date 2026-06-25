@@ -1382,6 +1382,11 @@ while ($listener.IsListening) {
       continue
     }
 
+    if ($path -eq "/api/omega/dph-preview") {
+      Send-Json $context 200 (Get-DphPreview $url $database)
+      continue
+    }
+
     if ($path -eq "/api/omega/dph-result-trend") {
       Send-Json $context 200 (Get-DphResultTrend $url $database)
       continue
