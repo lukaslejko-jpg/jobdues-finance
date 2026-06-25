@@ -416,6 +416,46 @@ function Get-RequestedDatabase($url) {
   return $db
 }
 
+function Get-DphRequestedPeriod($url) {
+  $dateValue = Get-QueryParam $url "to"
+  if ([string]::IsNullOrWhiteSpace($dateValue)) { $dateValue = Get-QueryParam $url "from" }
+  if ($dateValue -match "^(\d{4})-(\d{2})") {
+    return @{ year = [int]$matches[1]; month = [int]$matches[2] }
+  }
+  return @{ year = [int](Get-Date).Year; month = [int](Get-Date).Month }
+}
+
+function Get-DphClosureStatus($url, $database) {
+  $requested = Get-DphRequestedPeriod $url
+  $year = [int]$requested.year
+  $month = [int]$requested.month
+  if ($year -lt 2000 -or $year -gt 2100 -or $month -lt 1 -or $month -gt 12) {
+    throw "Invalid DPH period."
+  }
+
+  $kvdphRows = Invoke-Select "SELECT C010_IDUzavierka AS closureId, COUNT_BIG(*) AS [rowCount], MIN(C060_Den) AS minDay, MAX(C060_Den) AS maxDay FROM dbo.T061_KVDPH WHERE C062_Rok = $year AND C061_Mes = $month GROUP BY C010_IDUzavierka ORDER BY C010_IDUzavierka" $database
+  $eudRows = Invoke-Select "SELECT COUNT_BIG(*) AS documentCount, SUM(CASE WHEN ISNULL(C253_RokUzavierkyDPHUplatnenej,0) = $year AND ISNULL(C127_MesUzavierkyDPHUplatnenej,0) = $month THEN 1 ELSE 0 END) AS closedDocumentCount FROM dbo.T040_EUD WHERE C074_RokDUD = $year AND C073_MesDUD = $month" $database
+  $firstClosure = @($kvdphRows | Where-Object { (To-Number $_.closureId) -gt 0 } | Select-Object -First 1)
+  $hasClosure = @($firstClosure).Count -gt 0 -or (To-Number @($eudRows)[0].closedDocumentCount) -gt 0
+
+  return @{
+    hasOmegaClosure = [bool]$hasClosure
+    closureId = if (@($firstClosure).Count -gt 0) { To-Number $firstClosure.closureId } else { $null }
+    year = $year
+    month = $month
+    rowCount = if (@($kvdphRows).Count -gt 0) { To-Number (@($kvdphRows)[0].rowCount) } else { 0 }
+    minDay = if (@($kvdphRows).Count -gt 0) { To-Number (@($kvdphRows)[0].minDay) } else { $null }
+    maxDay = if (@($kvdphRows).Count -gt 0) { To-Number (@($kvdphRows)[0].maxDay) } else { $null }
+    documentCount = if (@($eudRows).Count -gt 0) { To-Number (@($eudRows)[0].documentCount) } else { 0 }
+    closedDocumentCount = if (@($eudRows).Count -gt 0) { To-Number (@($eudRows)[0].closedDocumentCount) } else { 0 }
+    source = "dbo.T061_KVDPH + dbo.T040_EUD"
+    status = if ($hasClosure) { "OMEGA_CLOSURE_FOUND" } else { "INFORMATIVE" }
+    label = if ($hasClosure) { "Vysledok DPH caka na schvalenie" } else { "Informativny stav DPH" }
+    appLockRequired = [bool]$hasClosure
+    lockedByOmega = $false
+  }
+}
+
 function Get-ClientInfo($database) {
   $rows = Invoke-Select "SELECT C000_ID, C097_MemoA FROM dbo.T000_INI WHERE C000_ID IN (1001,1010,1013,1014,1015,1017,7059,7060)" $database
   $map = @{}
@@ -663,13 +703,15 @@ function Get-EudDphPreview($url, $database) {
   $inputVat = To-Number $summary.inputVat
   $correctionVat = To-Number $summary.correctionVat
   $netVat = $outputVat - $inputVat
+  $closure = Get-DphClosureStatus $url $database
   return @{
     ok = $true
     database = $database
     mode = "real-sql"
     source = "dbo.T040_EUD + dbo.T041_EUD_Polozky"
-    status = "operational-preview"
-    note = "Pracovny readonly nahlad rovnaky typovo ako OMEGA informativny stav DPH bez uzavierok."
+    status = if ($closure.hasOmegaClosure) { "pending-client-approval" } else { "operational-preview" }
+    note = if ($closure.hasOmegaClosure) { "OMEGA DPH uzavierka existuje. V aplikacii vysledok caka na klientsky checklist." } else { "Pracovny readonly nahlad rovnaky typovo ako OMEGA informativny stav DPH bez uzavierok." }
+    closure = $closure
     summary = @{
       rowCount = To-Number $summary.rowCount
       outputBase = To-Number $summary.outputBase
@@ -720,6 +762,57 @@ function Get-DphPreview($url, $database) {
     }
     bySection = [object[]]$bySection
     byRate = [object[]]$byRate
+  }
+}
+
+function Get-DphResultTrend($url, $database) {
+  $amount = "CAST(ISNULL(p.C105_CiastkaTuzemskaMena,0) AS decimal(18,2))"
+  $outputRule = "p.C108_DALSyntetickyUcet = '343' AND p.C102_TypCiastkaTyp IN (16,17,73,78)"
+  $inputEligibilityRule = "NOT (ISNULL(e.C253_RokUzavierkyDPHUplatnenej,e.C074_RokDUD) = e.C074_RokDUD AND ISNULL(e.C127_MesUzavierkyDPHUplatnenej,0) > 0 AND e.C127_MesUzavierkyDPHUplatnenej < e.C073_MesDUD) AND NOT (ISNULL(e.C079_UctovneObdobieRok,e.C074_RokDUD) = e.C074_RokDUD AND ISNULL(e.C078_UctovneObdobie,e.C073_MesDUD) > e.C073_MesDUD)"
+  $inputRule = "p.C106_MDSyntetickyUcet = '343' AND p.C102_TypCiastkaTyp IN (6,7,82,84,253) AND ($inputEligibilityRule)"
+  $standardCorrectionRule = "p.C102_TypCiastkaTyp IN (88)"
+  $deductionCorrectionRule = "((p.C106_MDSyntetickyUcet = '343' OR p.C108_DALSyntetickyUcet = '343') AND p.C102_TypCiastkaTyp IN (90))"
+  $correctionRule = "(($standardCorrectionRule) OR ($deductionCorrectionRule))"
+  $correctionAmount = "CASE WHEN $standardCorrectionRule THEN $amount WHEN ($deductionCorrectionRule) AND p.C108_DALSyntetickyUcet = '343' THEN $amount WHEN ($deductionCorrectionRule) AND p.C106_MDSyntetickyUcet = '343' THEN -$amount ELSE 0 END"
+
+  $to = Get-QueryParam $url "to"
+  $targetYear = 0
+  $targetMonth = 0
+  if ($to -match "^(\d{4})-(\d{2})-(\d{2})$") {
+    $targetYear = [int]$Matches[1]
+    $targetMonth = [int]$Matches[2]
+  }
+  else {
+    $latest = First-Row "SELECT YEAR(MAX(DATEFROMPARTS(C074_RokDUD,C073_MesDUD,1))) AS targetYear, MONTH(MAX(DATEFROMPARTS(C074_RokDUD,C073_MesDUD,1))) AS targetMonth FROM dbo.T040_EUD WHERE C074_RokDUD IS NOT NULL AND C073_MesDUD BETWEEN 1 AND 12 AND (ISNULL(C107_DPHPouzita,0)<>0 OR ISNULL(C218_SumaDPHNizsia,0)<>0 OR ISNULL(C219_SumaDPHVyssia,0)<>0 OR ISNULL(C258_SumaDPHZnizena2,0)<>0 OR ISNULL(C262_SumaDPHZnizena3,0)<>0)" $database
+    $targetYear = [int](To-Number $latest.targetYear)
+    $targetMonth = [int](To-Number $latest.targetMonth)
+  }
+  if ($targetYear -lt 2000 -or $targetMonth -lt 1 -or $targetMonth -gt 12) {
+    return @{ ok = $true; database = $database; mode = "real-sql"; year = $targetYear; endMonth = $targetMonth; data = [object[]]@() }
+  }
+
+  $rows = Invoke-Select "SELECT e.C073_MesDUD AS monthNumber, SUM(CASE WHEN $outputRule THEN $amount ELSE 0 END) AS outputVat, SUM(CASE WHEN $inputRule THEN $amount ELSE 0 END) AS inputVat, SUM($correctionAmount) AS correctionVat FROM dbo.T041_EUD_Polozky p JOIN dbo.T040_EUD e ON e.C000_ID = p.C010_IDEUD WHERE e.C074_RokDUD = $targetYear AND e.C073_MesDUD BETWEEN 1 AND $targetMonth AND (($outputRule) OR ($inputRule) OR ($correctionRule)) GROUP BY e.C073_MesDUD ORDER BY e.C073_MesDUD" $database
+  $data = foreach ($month in 1..$targetMonth) {
+    $row = @($rows | Where-Object { [int](To-Number $_.monthNumber) -eq $month } | Select-Object -First 1)[0]
+    $outputVat = if ($null -ne $row) { To-Number $row.outputVat } else { 0 }
+    $inputVat = if ($null -ne $row) { To-Number $row.inputVat } else { 0 }
+    $correctionVat = if ($null -ne $row) { To-Number $row.correctionVat } else { 0 }
+    @{
+      monthNumber = $month
+      outputVat = $outputVat
+      inputVat = $inputVat
+      correctionVat = $correctionVat
+      resultVat = $outputVat - $inputVat + $correctionVat
+    }
+  }
+  return @{
+    ok = $true
+    database = $database
+    mode = "real-sql"
+    source = "dbo.T040_EUD + dbo.T041_EUD_Polozky"
+    year = $targetYear
+    endMonth = $targetMonth
+    data = [object[]]$data
   }
 }
 
@@ -1286,6 +1379,11 @@ while ($listener.IsListening) {
         continue
       }
       Send-Json $context 200 (Get-DphPreview $url $database)
+      continue
+    }
+
+    if ($path -eq "/api/omega/dph-result-trend") {
+      Send-Json $context 200 (Get-DphResultTrend $url $database)
       continue
     }
 
