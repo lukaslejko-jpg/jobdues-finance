@@ -492,6 +492,175 @@
         font-size:12px!important;
       }
     }
+    @media(max-width:760px){
+      .dph-preview-card,
+      .dph-preview-card *{box-sizing:border-box!important}
+      .dph-preview-card{
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        overflow:visible!important;
+      }
+      .dph-preview-card .rule-settings{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr)!important;
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        overflow:visible!important;
+      }
+      .dph-preview-card .comment,
+      .dph-preview-card .alert{
+        display:block!important;
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        overflow:visible!important;
+        white-space:normal!important;
+        overflow-wrap:anywhere!important;
+        word-break:normal!important;
+        line-height:1.35!important;
+        font-size:15px!important;
+      }
+      .dph-preview-card .comment strong{display:inline!important;white-space:normal!important}
+      .dph-preview-card .kpis.four{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr)!important;
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        gap:12px!important;
+      }
+      .dph-preview-card .kpi{
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        min-height:104px!important;
+        padding:16px!important;
+        overflow:visible!important;
+      }
+      .dph-preview-card .kpi span{
+        display:block!important;
+        white-space:normal!important;
+        overflow-wrap:anywhere!important;
+        line-height:1.2!important;
+        font-size:12px!important;
+      }
+      .dph-preview-card .kpi strong{
+        display:block!important;
+        max-width:100%!important;
+        white-space:normal!important;
+        overflow-wrap:anywhere!important;
+        font-size:clamp(28px,10vw,38px)!important;
+        line-height:1!important;
+      }
+      .dph-preview-card .dph-pie-dashboard{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr)!important;
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        gap:14px!important;
+        overflow:visible!important;
+      }
+      .dph-preview-card .pie-card,
+      .dph-preview-card .pie-result{
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        padding:16px!important;
+        overflow:visible!important;
+      }
+      .dph-preview-card .pie-card-head,
+      .dph-preview-card .pie-card-head>div{
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+      }
+      .dph-preview-card .pie-card-head strong,
+      .dph-preview-card .pie-card-head small{
+        display:block!important;
+        max-width:100%!important;
+        white-space:normal!important;
+        overflow-wrap:anywhere!important;
+        line-height:1.25!important;
+      }
+      .dph-preview-card .pie-wrap{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr)!important;
+        justify-items:center!important;
+        align-items:start!important;
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        gap:12px!important;
+        overflow:visible!important;
+      }
+      .dph-preview-card .pie-svg{
+        display:block!important;
+        width:min(176px,48vw)!important;
+        max-width:100%!important;
+        height:auto!important;
+        margin:0 auto!important;
+        justify-self:center!important;
+      }
+      .dph-preview-card .pie-legend{
+        display:grid!important;
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        gap:8px!important;
+      }
+      .dph-preview-card .pie-legend-row{
+        display:grid!important;
+        grid-template-columns:12px minmax(0,1fr)!important;
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        gap:8px!important;
+        align-items:start!important;
+      }
+      .dph-preview-card .pie-legend-row>span:last-child{
+        grid-column:2!important;
+        justify-self:start!important;
+        white-space:normal!important;
+        font-size:12px!important;
+      }
+      .dph-preview-card .pie-legend-row strong,
+      .dph-preview-card .pie-legend-row small{
+        display:block!important;
+        max-width:100%!important;
+        white-space:normal!important;
+        overflow-wrap:anywhere!important;
+        word-break:break-word!important;
+        line-height:1.18!important;
+      }
+      .dph-preview-card .pie-result{
+        justify-self:stretch!important;
+        text-align:center!important;
+      }
+      .dph-preview-card .dph-trend-panel{
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        overflow:hidden!important;
+      }
+    }
+    @media(max-width:430px){
+      .dph-preview-card .pie-svg{width:min(150px,42vw)!important}
+      .dph-preview-card .pie-legend-row strong{font-size:13px!important}
+      .dph-preview-card .pie-legend-row small{font-size:12px!important}
+      .dph-preview-card .pie-card{padding:14px!important}
+      .dph-preview-card .comment{font-size:14px!important}
+      .ai-fab{
+        right:8px!important;
+        bottom:82px!important;
+        height:38px!important;
+        max-width:calc(100vw - 172px)!important;
+        padding:0 10px!important;
+        font-size:11px!important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -751,7 +920,7 @@
     function dphResultTrendChart(){const rows=Array.isArray(dphTrend?.data)?dphTrend.data:[];if(!rows.length)return `<div class="comment">Pre zvolený rok zatiaľ nie sú dostupné mesačné výsledky DPH.</div>`;const months=["jan","feb","mar","apr","máj","jún","júl","aug","sep","okt","nov","dec"],values=rows.map(r=>Number(r.resultVat)||0),rawMin=Math.min(0,...values),rawMax=Math.max(0,...values),padding=Math.max(1,(rawMax-rawMin)*.12),min=rawMin<0?rawMin-padding:0,max=rawMax>0?rawMax+padding:padding,range=max-min||1,w=980,h=320,left=72,right=28,top=32,bottom=48,plotW=w-left-right,plotH=h-top-bottom,step=rows.length>1?plotW/(rows.length-1):0,y=v=>top+(max-v)/range*plotH,x=i=>left+i*step,zeroY=y(0),path=rows.map((r,i)=>`${i?"L":"M"}${x(i).toFixed(1)} ${y(values[i]).toFixed(1)}`).join(" "),ticks=[0,.25,.5,.75,1].map(t=>max-(range*t));return `<div class="dph-trend-chart"><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Vývoj výsledku DPH za rok ${Number(dphTrend.year)||""}"><g class="dph-trend-grid">${ticks.map(v=>`<line x1="${left}" x2="${w-right}" y1="${y(v)}" y2="${y(v)}"/><text x="${left-12}" y="${y(v)+4}" text-anchor="end">${Math.round(v).toLocaleString("sk-SK")}</text>`).join("")}</g><line class="dph-zero-line" x1="${left}" x2="${w-right}" y1="${zeroY}" y2="${zeroY}"/><path class="dph-result-line" d="${path}"/>${rows.map((r,i)=>`<g><circle class="dph-result-point ${values[i]<0?"negative":"positive"}" cx="${x(i)}" cy="${y(values[i])}" r="5"><title>${months[(Number(r.monthNumber)||1)-1]} ${dphTrend.year}: ${fmt.format(values[i])}</title></circle><text class="dph-month-label" x="${x(i)}" y="${h-17}" text-anchor="middle">${months[(Number(r.monthNumber)||1)-1]}</text></g>`).join("")}</svg><div class="dph-trend-legend"><span><i></i>Výsledok DPH</span><strong>${fmt.format(values[values.length-1]||0)}</strong></div></div>`}
     function dphResultTrendPanel(){if(dphTrendLoading)return `<section class="dph-trend-panel"><div class="comment">Načítavam mesačný vývoj výsledku DPH...</div></section>`;if(dphTrend&&!dphTrend.ok)return `<section class="dph-trend-panel"><div class="comment">${escHtml(dphTrend.error||"Mesačný vývoj DPH sa nepodarilo načítať.")}</div></section>`;if(!(dphTrend&&dphTrend.ok))return "";return `<section class="dph-trend-panel"><div class="dph-trend-head"><div><strong>Vývoj výsledku DPH</strong><small>Jeden výsledok za každý mesiac od januára do ${Number(dphTrend.endMonth)||0}. mesiaca ${Number(dphTrend.year)||""}.</small></div><span class="badge">${Number(dphTrend.year)||""}</span></div>${dphResultTrendChart()}</section>`}
     function canShowDphPreview(){return true}
-    function dphPreviewPanel(){const s=(dphPreview&&dphPreview.summary)||{},pending=dphEffectiveStatus()==="PENDING_APPROVAL",pendingNote=pending?`<small>Informatívny výsledok pripravený na schválenie klientom.</small>`:"";const periodNote=`<div class="comment"><strong>DPH obdobie:</strong> ${escHtml(periodLabel())}</div>`;const body=dphPreviewLoading?`${periodNote}<div class="comment">Načítavam pracovný DPH preview za aktuálne vybrané obdobie...</div>`:dphPreview&&dphPreview.ok?`${periodNote}<div class="kpis four"><article class="kpi"><span>DPH na výstupe</span><strong class="green">${fmt.format(Number(s.outputVat)||0)}</strong></article><article class="kpi"><span>DPH na vstupe</span><strong class="blue">${fmt.format(Number(s.inputVat)||0)}</strong></article><article class="kpi"><span>Korekcie</span><strong class="orange">${fmt.format(Number(s.correctionVat)||0)}</strong></article><article class="kpi"><span>${escHtml(s.resultLabel||"Výsledok")}</span><strong class="${Number(s.netVatWithCorrections||0)<0?"blue":"red"}">${fmt.format(Number(s.netVatWithCorrections)||0)}</strong>${pendingNote}</article></div>${dphVatChartPanel()}`:dphPreview&&!dphPreview.ok?`${periodNote}<div class="alert critical"><strong>DPH preview zlyhalo</strong><span>${escHtml(dphPreview.error||"Neznáma chyba.")}</span></div>`:`${periodNote}<div class="comment">Kliknutím načítaš aktuálny readonly DPH náhľad za vybraný mesiac. Nič sa nezapisuje do OMEGY.</div>`;const btn=`<button class="notify-primary" type="button" onclick="runDphPreview()" ${dphPreviewLoading?"disabled":""}>${dphPreviewLoading?"Načítavam...":dphPreview&&dphPreview.ok?"Obnoviť DPH náhľad":"Spustiť DPH preview"}</button>`;return card(role==="admin"?"Admin DPH preview":"DPH preview","DPH",`<div class="rule-settings">${body}${btn}${dphResultTrendPanel()}</div>`,"span12")}
+    function dphPreviewPanel(){const s=(dphPreview&&dphPreview.summary)||{},pending=dphEffectiveStatus()==="PENDING_APPROVAL",pendingNote=pending?`<small>Informatívny výsledok pripravený na schválenie klientom.</small>`:"";const periodNote=`<div class="comment"><strong>DPH obdobie:</strong> ${escHtml(periodLabel())}</div>`;const body=dphPreviewLoading?`${periodNote}<div class="comment">Načítavam pracovný DPH preview za aktuálne vybrané obdobie...</div>`:dphPreview&&dphPreview.ok?`${periodNote}<div class="kpis four"><article class="kpi"><span>DPH na výstupe</span><strong class="green">${fmt.format(Number(s.outputVat)||0)}</strong></article><article class="kpi"><span>DPH na vstupe</span><strong class="blue">${fmt.format(Number(s.inputVat)||0)}</strong></article><article class="kpi"><span>Korekcie</span><strong class="orange">${fmt.format(Number(s.correctionVat)||0)}</strong></article><article class="kpi"><span>${escHtml(s.resultLabel||"Výsledok")}</span><strong class="${Number(s.netVatWithCorrections||0)<0?"blue":"red"}">${fmt.format(Number(s.netVatWithCorrections)||0)}</strong>${pendingNote}</article></div>${dphVatChartPanel()}`:dphPreview&&!dphPreview.ok?`${periodNote}<div class="alert critical"><strong>DPH preview zlyhalo</strong><span>${escHtml(dphPreview.error||"Neznáma chyba.")}</span></div>`:`${periodNote}<div class="comment">Kliknutím načítaš aktuálny readonly DPH náhľad za vybraný mesiac. Nič sa nezapisuje do OMEGY.</div>`;const btn=`<button class="notify-primary" type="button" onclick="runDphPreview()" ${dphPreviewLoading?"disabled":""}>${dphPreviewLoading?"Načítavam...":dphPreview&&dphPreview.ok?"Obnoviť DPH náhľad":"Spustiť DPH preview"}</button>`;return card(role==="admin"?"Admin DPH preview":"DPH preview","DPH",`<div class="rule-settings">${body}${btn}${dphResultTrendPanel()}</div>`,"span12 dph-preview-card")}
     function dphApprovalKey(){return `financeAiDphApproval:${client.database||""}:${period}:${customFrom||""}:${customTo||""}`}
     function dphChecklistTemplate(){return [["docs","Doklady za obdobie","Potvrdzujem, že všetky prijaté faktúry, nákladové doklady a dobropisy za vybrané obdobie sú dodané."],["cash","Pokladňa a hotovosť","Potvrdzujem, že bločky, hotovostné výdavky a interné doklady za obdobie sú odovzdané."],["bank","Banky a platby","Potvrdzujem, že bankové výpisy a platby za obdobie sú kompletné alebo viem uviesť chýbajúce položky."],["sales","Výnosy a vystavené doklady","Potvrdzujem, že vystavené faktúry, tržby a prípadné storno doklady za obdobie sú kompletné."],["responsibility","Vecná správnosť","Beriem na vedomie, že doklady nedodané do termínu nemusia byť zahrnuté do DPH podkladov."]]}
     function readDphApproval(){let stored=null;try{stored=JSON.parse(localStorage.getItem(dphApprovalKey())||"null")}catch(e){}const items=dphChecklistTemplate().map(x=>({id:x[0],title:x[1],text:x[2],checked:!!stored?.items?.find(i=>i.id===x[0])?.checked,checkedAt:stored?.items?.find(i=>i.id===x[0])?.checkedAt||""}));return {status:stored?.status||"IN_PROGRESS",items,history:Array.isArray(stored?.history)?stored.history:[]}}
