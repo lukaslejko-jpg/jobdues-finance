@@ -219,6 +219,18 @@ function Get-AuthContext($context) {
 function Test-AuthorizedDatabase($auth, $database) {
   if ($null -eq $auth) { return $false }
   if ($auth.role -eq "admin") { return $true }
+  if ($auth.role -eq "accountant") {
+    $email = ([string]$auth.email).Trim().ToLowerInvariant()
+    $items = @(Read-AccessConfig)
+    foreach ($item in $items) {
+      $itemEmail = ([string]$item.email).Trim().ToLowerInvariant()
+      $itemRole = if ($item.role) { [string]$item.role } else { "client" }
+      $itemActive = if ($null -ne $item.active) { [bool]$item.active } else { $true }
+      if ($itemActive -and -not (Test-AccessExpired $item) -and $itemEmail -eq $email -and $itemRole -eq "accountant" -and [string]$item.database -eq [string]$database) {
+        return $true
+      }
+    }
+  }
   return ([string]$auth.database -eq [string]$database)
 }
 
@@ -351,6 +363,20 @@ function Find-LoginAccess($email, $password, $role) {
     }
   }
   return $null
+}
+
+function Find-LoginAccesses($email, $password, $role) {
+  $email = ([string]$email).Trim().ToLowerInvariant()
+  $password = [string]$password
+  $role = [string]$role
+  if ([string]::IsNullOrWhiteSpace($email) -or [string]::IsNullOrWhiteSpace($password)) { return @() }
+  $items = @(Read-AccessConfig)
+  return @($items | Where-Object {
+    $itemEmail = ([string]$_.email).Trim().ToLowerInvariant()
+    $itemRole = if ($_.role) { [string]$_.role } else { "client" }
+    $itemActive = if ($null -ne $_.active) { [bool]$_.active } else { $true }
+    $itemActive -and -not (Test-AccessExpired $_) -and $itemEmail -eq $email -and [string]$_.password -eq $password -and $itemRole -eq $role
+  })
 }
 
 function Find-Companies($search) {
@@ -1159,7 +1185,7 @@ while ($listener.IsListening) {
 
     if ($path -eq "/api/auth/login" -and $context.Request.HttpMethod -eq "POST") {
       $body = Read-JsonBody $context
-      $loginRole = if ($body.role -eq "admin") { "admin" } else { "client" }
+      $loginRole = if ($body.role -eq "admin") { "admin" } elseif ($body.role -eq "accountant") { "accountant" } else { "client" }
       $access = Find-LoginAccess $body.email $body.password $loginRole
       if ($null -eq $access) {
         Add-LoginAudit $context $body.email $loginRole "" "" $false "Nespravny email, heslo, rola, deaktivovany alebo expirovany pristup."
@@ -1167,6 +1193,16 @@ while ($listener.IsListening) {
         continue
       }
       $loginDb = [string]$access.database
+      $loginCompanies = @()
+      if ($loginRole -eq "accountant") {
+        $loginCompanies = @(Find-LoginAccesses $body.email $body.password $loginRole | ForEach-Object {
+          @{
+            database = [string]$_.database
+            companyName = [string]$_.companyName
+            ico = if ($_.ico) { [string]$_.ico } else { "" }
+          }
+        })
+      }
       $session = New-AuthSession $access $loginRole
       Add-LoginAudit $context $access.email $loginRole $loginDb $access.companyName $true "Prihlasenie uspesne."
       Send-Json $context 200 @{
@@ -1182,6 +1218,7 @@ while ($listener.IsListening) {
           companyName = $access.companyName
         }
         client = Get-ClientInfo $loginDb
+        companies = $loginCompanies
       }
       continue
     }
@@ -1316,16 +1353,20 @@ while ($listener.IsListening) {
         $email = [string]$body.email
         $database = [string]$body.database
         $companyName = [string]$body.companyName
+        $accessRole = if ($body.role) { [string]$body.role } else { "client" }
         if ([string]::IsNullOrWhiteSpace($email) -or [string]::IsNullOrWhiteSpace($database)) {
           Send-Json $context 400 @{ ok = $false; error = "Email and database are required." }
           continue
         }
-        $items = @(Read-AccessConfig | Where-Object { -not ($_.email -eq $email -and $_.database -eq $database) })
+        $items = @(Read-AccessConfig | Where-Object {
+          $itemRole = if ($_.role) { [string]$_.role } else { "client" }
+          -not ($_.email -eq $email -and $_.database -eq $database -and $itemRole -eq $accessRole)
+        })
         $items += [pscustomobject]@{
           email = $email
           database = $database
           companyName = $companyName
-          role = if ($body.role) { [string]$body.role } else { "client" }
+          role = $accessRole
           password = if ($body.password) { [string]$body.password } else { "" }
           active = if ($null -ne $body.active) { [bool]$body.active } else { $true }
           expiresAt = if ($body.expiresAt) { [string]$body.expiresAt } else { "" }
@@ -1345,7 +1386,15 @@ while ($listener.IsListening) {
       $body = Read-JsonBody $context
       $email = [string]$body.email
       $database = [string]$body.database
-      $items = @(Read-AccessConfig | Where-Object { -not ($_.email -eq $email -and $_.database -eq $database) })
+      $deleteRole = if ($body.role) { [string]$body.role } else { "" }
+      $items = @(Read-AccessConfig | Where-Object {
+        $itemRole = if ($_.role) { [string]$_.role } else { "client" }
+        if ([string]::IsNullOrWhiteSpace($deleteRole)) {
+          -not ($_.email -eq $email -and $_.database -eq $database)
+        } else {
+          -not ($_.email -eq $email -and $_.database -eq $database -and $itemRole -eq $deleteRole)
+        }
+      })
       Write-AccessConfig $items
       Send-Json $context 200 @{ ok = $true; assignments = [object[]]$items }
       continue
