@@ -1184,6 +1184,7 @@ while ($listener.IsListening) {
       Send-Json $context 200 @{
         ok = $true
         mode = "secure-api"
+        companyCatalog = "all-batch-v2"
         authRequired = $true
         allowedOrigins = [object[]](Get-AllowedOrigins)
       }
