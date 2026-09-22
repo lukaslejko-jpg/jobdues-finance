@@ -399,30 +399,36 @@ function Find-Companies($search, $limit = 20) {
     while ($reader.Read()) { $dbs += [string]$reader["name"] }
     $reader.Close()
 
-    foreach ($db in $dbs) {
-      try {
-        $safeDb = "[" + $db.Replace("]", "]]") + "]"
-        $q = $conn.CreateCommand()
-        $q.CommandTimeout = 2
-        $q.CommandText = "IF OBJECT_ID('$safeDb.dbo.T000_INI') IS NOT NULL SELECT TOP 1 nameRow.C097_MemoA AS companyName, icoRow.C097_MemoA AS ico FROM $safeDb.dbo.T000_INI nameRow LEFT JOIN $safeDb.dbo.T000_INI icoRow ON icoRow.C000_ID = 1017 WHERE nameRow.C000_ID = 1010 ELSE SELECT NULL AS companyName, NULL AS ico"
-        $r = $q.ExecuteReader()
-        if ($r.Read() -and $r["companyName"] -ne [DBNull]::Value) {
+    $statements = @($dbs | ForEach-Object {
+      $db = [string]$_
+      $safeDb = "[" + $db.Replace("]", "]]") + "]"
+      $dbLiteral = $db.Replace("'", "''")
+      "BEGIN TRY IF OBJECT_ID(N'$safeDb.dbo.T000_INI') IS NOT NULL SELECT TOP 1 N'$dbLiteral' AS [database], nameRow.C097_MemoA AS companyName, icoRow.C097_MemoA AS ico FROM $safeDb.dbo.T000_INI nameRow LEFT JOIN $safeDb.dbo.T000_INI icoRow ON icoRow.C000_ID = 1017 WHERE nameRow.C000_ID = 1010; END TRY BEGIN CATCH END CATCH;"
+    })
+
+    if ($statements.Count -gt 0) {
+      $q = $conn.CreateCommand()
+      $q.CommandTimeout = 30
+      $q.CommandText = $statements -join [Environment]::NewLine
+      $r = $q.ExecuteReader()
+      do {
+        while ($r.Read()) {
+          if ($r["companyName"] -eq [DBNull]::Value) { continue }
+          $db = [string]$r["database"]
           $companyName = [string]$r["companyName"]
           $ico = if ($r["ico"] -ne [DBNull]::Value) { [string]$r["ico"] } else { "" }
           if ([string]::IsNullOrWhiteSpace($search) -or $companyName.ToLowerInvariant().Contains($search.ToLowerInvariant()) -or $ico.Contains($search)) {
             $companies += [pscustomobject]@{ database = $db; companyName = $companyName; ico = $ico }
           }
         }
-        $r.Close()
-      }
-      catch {}
-      if ($companies.Count -ge $limit) { break }
+      } while ($r.NextResult())
+      $r.Close()
     }
   }
   finally {
     if ($conn.State -eq "Open") { $conn.Close() }
   }
-  return $companies
+  return @($companies | Sort-Object companyName, database | Select-Object -First $limit)
 }
 
 function Get-QueryParam($url, $name) {
