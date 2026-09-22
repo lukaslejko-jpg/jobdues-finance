@@ -379,7 +379,8 @@ function Find-LoginAccesses($email, $password, $role) {
   })
 }
 
-function Find-Companies($search) {
+function Find-Companies($search, $limit = 20) {
+  $limit = [Math]::Max(1, [Math]::Min(500, [int]$limit))
   $master = New-Object System.Data.SqlClient.SqlConnectionStringBuilder
   $master["Data Source"] = "$($envMap.SQL_SERVER),$($envMap.SQL_PORT)"
   $master["Initial Catalog"] = "master"
@@ -415,7 +416,7 @@ function Find-Companies($search) {
         $r.Close()
       }
       catch {}
-      if ($companies.Count -ge 20) { break }
+      if ($companies.Count -ge $limit) { break }
     }
   }
   finally {
@@ -1405,11 +1406,10 @@ while ($listener.IsListening) {
         Send-Json $context 403 @{ ok = $false; error = "Admin opravnenie je povinne." }
         continue
       }
-      $search = $url.Query.TrimStart("?").Split("&") | ForEach-Object {
-        $parts = $_.Split("=", 2)
-        if ($parts.Count -eq 2 -and $parts[0] -eq "q") { [System.Uri]::UnescapeDataString($parts[1]) }
-      } | Select-Object -First 1
-      Send-Json $context 200 @{ ok = $true; data = [object[]](Find-Companies $search) }
+      $search = Get-QueryParam $url "q"
+      $all = Get-QueryParam $url "all"
+      $limit = if ($all -eq "1") { 500 } else { 20 }
+      Send-Json $context 200 @{ ok = $true; data = [object[]](Find-Companies $search $limit) }
       continue
     }
 
